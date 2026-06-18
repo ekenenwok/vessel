@@ -384,7 +384,8 @@
       });
       const data = await res.json();
       if (!res.ok){
-        addMessage('err', "The signal's weak right now — give it a moment and try again.");
+        const reason = (data && (data.error || data.detail)) ? `(${data.error || 'error'}) ${data.detail || ''}` : 'unknown error';
+        addMessage('err', 'Debug — ' + reason);
         setState(null);
         return;
       }
