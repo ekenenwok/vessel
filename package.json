@@ -2,6 +2,7 @@
   "name": "vessel-0g-companion",
   "version": "1.0.0",
   "private": true,
-  "description": "An AI companion powered by the 0G Compute Network — built for the Zero Cup hackathon.",
+  "type": "module",
+  "description": "An AI companion powered by Groq, built for the Zero Cup hackathon.",
   "dependencies": {}
 }
