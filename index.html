@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vessel — a companion that's actually yours</title>
+<meta name="description" content="An AI companion whose mind runs on 0G's decentralized, TEE-verified compute network. Built for the Zero Cup." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E0B14;
+    --surface:#1A1522;
+    --surface-line: rgba(245,241,248,0.10);
+    --rose:#F2A6C9;
+    --cyan:#7FE7E0;
+    --text:#F5F1F8;
+    --muted:#9C8FB0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(242,166,201,0.08), transparent),
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);}
+  .wrap{
+    max-width:560px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .mark{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.12em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .mark b{color:var(--text);}
+  .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+
+  /* ---- the orb ---- */
+  .stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:18px 0 6px;
+  }
+  .orb-frame{
+    position:relative;
+    width:168px;
+    height:168px;
+    margin-bottom:22px;
+  }
+  .orb{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), transparent 40%),
+      radial-gradient(circle at 65% 70%, var(--cyan), transparent 60%),
+      radial-gradient(circle at 35% 75%, var(--rose), transparent 60%),
+      #2a2236;
+    filter: blur(0.4px) saturate(1.15);
+    box-shadow: 0 0 60px -8px rgba(127,231,224,0.45), 0 0 90px -10px rgba(242,166,201,0.35);
+    animation: breathe 4.2s ease-in-out infinite;
+  }
+  .orb-ring{
+    position:absolute;
+    inset:-14px;
+    border-radius:50%;
+    border:1px solid rgba(245,241,248,0.14);
+    animation: spin 22s linear infinite;
+  }
+  .orb-ring::before{
+    content:"";
+    position:absolute;
+    top:-2px; left:50%;
+    width:5px; height:5px;
+    margin-left:-2.5px;
+    border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 8px var(--cyan);
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(1); opacity:0.92; }
+    50%{ transform:scale(1.045); opacity:1; }
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .orb-frame.thinking .orb{ animation-duration:1.1s; }
+  .orb-frame.thinking .orb-ring{ animation-duration:4s; }
+  .orb-frame.speaking .orb{ animation-duration:0.7s; }
+  @media (prefers-reduced-motion: reduce){
+    .orb, .orb-ring{ animation:none !important; }
+  }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:34px;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+  }
+  .sub{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:17px;
+    color:var(--rose);
+    margin:0 0 14px;
+  }
+  .desc{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--muted);
+    max-width:420px;
+    margin:0 auto;
+  }
+
+  /* ---- panels ---- */
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--surface-line);
+    border-radius:16px;
+    padding:20px;
+    margin-top:26px;
+  }
+  label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  input[type="text"]{
+    width:100%;
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--surface-line);
+    border-radius:10px;
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    padding:12px 14px;
+    margin-bottom:18px;
+  }
+  input[type="text"]:focus, button:focus-visible, .chip:focus-visible{
+    outline:2px solid var(--cyan);
+    outline-offset:2px;
+  }
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .chip{
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid var(--surface-line);
+    background:transparent;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .chip[aria-pressed="true"]{
+    background:linear-gradient(135deg, rgba(127,231,224,0.18), rgba(242,166,201,0.18));
+    border-color:var(--cyan);
+  }
+  .btn-primary{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px 18px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    color:#11101A;
+    background:linear-gradient(135deg, var(--cyan), var(--rose));
+  }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  /* ---- chat ---- */
+  #chat-panel{ display:none; }
+  .log{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:46vh;
+    overflow-y:auto;
+    margin-bottom:16px;
+    padding-right:2px;
+  }
+  .msg{
+    max-width:85%;
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:rgba(127,231,224,0.14);
+    border:1px solid rgba(127,231,224,0.25);
+  }
+  .msg.bot{
+    align-self:flex-start;
+    background:rgba(242,166,201,0.10);
+    border:1px solid rgba(242,166,201,0.2);
+  }
+  .msg.err{
+    align-self:flex-start;
+    color:var(--muted);
+    font-style:italic;
+  }
+  .row{ display:flex; gap:8px; }
+  .row input{ flex:1; margin-bottom:0; }
+  .row button{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:0 18px;
+    border-radius:10px;
+    border:none;
+    background:var(--cyan);
+    color:#11101A;
+    cursor:pointer;
+  }
+
+  /* ---- footer ---- */
+  .status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:26px;
+  }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 6px var(--cyan);
+  }
+  .roadmap{
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.6;
+    margin-top:10px;
+    border-top:1px dashed var(--surface-line);
+    padding-top:10px;
+  }
+  .roadmap b{ color:var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="mark"><b>VESSEL</b></span>
+    <span class="tag">built for the Zero Cup</span>
+  </header>
+
+  <div class="stage">
+    <div class="orb-frame" id="orb-frame">
+      <div class="orb-ring"></div>
+      <div class="orb"></div>
+    </div>
+    <h1>Vessel</h1>
+    <p class="sub">a companion that's actually yours</p>
+    <p class="desc">
+      Most companion apps run on someone else's server — they can be shut down, throttled, or quietly swapped for a cheaper model. Vessel's mind runs on the
+      <a href="https://docs.0g.ai" target="_blank" rel="noopener">0G Compute Network</a>,
+      inside hardware-verified Trusted Execution Environments. No single company holds the off switch.
+    </p>
+  </div>
+
+  <div class="panel" id="create-panel">
+    <label for="name-input">Name your companion</label>
+    <input type="text" id="name-input" placeholder="e.g. Wren" maxlength="24" />
+
+    <label>Choose a temperament</label>
+    <div class="chips" id="chip-row">
+      <button class="chip" data-trait="warm" aria-pressed="true">Warm</button>
+      <button class="chip" data-trait="sharp" aria-pressed="false">Sharp</button>
+      <button class="chip" data-trait="playful" aria-pressed="false">Playful</button>
+      <button class="chip" data-trait="stoic" aria-pressed="false">Stoic</button>
+    </div>
+
+    <button class="btn-primary" id="awaken-btn">Awaken</button>
+  </div>
+
+  <div class="panel" id="chat-panel">
+    <div class="log" id="log"></div>
+    <div class="row">
+      <input type="text" id="msg-input" placeholder="Say something…" />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <div class="status">
+    <span class="dot"></span>
+    <span>running on 0G Compute Network — TEE-verified inference</span>
+  </div>
+  <div class="roadmap">
+    <b>Next up:</b> persistent memory via 0G Storage, and true on-chain ownership by minting each companion as an Intelligent NFT (ERC-7857) — so the personality and its memories travel with the token, not with this website.
+  </div>
+
+</div>
+
+<script>
+  const TRAITS = {
+    warm: "You speak with warmth, encouragement, and gentle curiosity. Keep replies short — 2 to 4 sentences.",
+    sharp: "You speak with wit, precision, and a dry sense of humor. Keep replies short — 2 to 4 sentences.",
+    playful: "You speak with playful energy, light teasing, and curiosity about the person you're talking to. Keep replies short — 2 to 4 sentences.",
+    stoic: "You speak calmly and briefly, with quiet, grounded wisdom. Keep replies short — 1 to 3 sentences."
+  };
+
+  const orbFrame = document.getElementById('orb-frame');
+  const createPanel = document.getElementById('create-panel');
+  const chatPanel = document.getElementById('chat-panel');
+  const nameInput = document.getElementById('name-input');
+  const chipRow = document.getElementById('chip-row');
+  const awakenBtn = document.getElementById('awaken-btn');
+  const log = document.getElementById('log');
+  const msgInput = document.getElementById('msg-input');
+  const sendBtn = document.getElementById('send-btn');
+
+  let trait = 'warm';
+  let companionName = 'Vessel';
+  let history = [];
+
+  chipRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    trait = btn.dataset.trait;
+    [...chipRow.children].forEach(c => c.setAttribute('aria-pressed', c === btn ? 'true' : 'false'));
+  });
+
+  function addMessage(role, text){
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setState(state){
+    orbFrame.classList.remove('thinking', 'speaking');
+    if (state) orbFrame.classList.add(state);
+  }
+
+  async function callCompanion(userText){
+    setState('thinking');
+    try{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name: companionName,
+          systemPrompt: TRAITS[trait],
+          messages: history
+        })
+      });
+      const data = await res.json();
+      if (!res.ok){
+        const reason = (data && (data.error || data.detail)) ? `(${data.error || 'error'}) ${data.detail || ''}` : 'unknown error';
+        addMessage('err', 'Debug — ' + reason);
+        setState(null);
+        return;
+      }
+      history.push({role:'assistant', content:data.reply});
+      addMessage('bot', data.reply);
+      setState('speaking');
+      setTimeout(() => setState(null), 900);
+    } catch(err){
+      addMessage('err', "Couldn't reach the network just now — check your connection and try again.");
+      setState(null);
+    }
+  }
+
+  awakenBtn.addEventListener('click', async () => {
+    const typed = nameInput.value.trim();
+    if (typed) companionName = typed;
+    createPanel.style.display = 'none';
+    chatPanel.style.display = 'block';
+    history = [];
+    log.innerHTML = '';
+    history.push({role:'user', content:'(The connection opens for the first time. Greet the person warmly and briefly, and introduce yourself by name.)'});
+    await callCompanion();
+  });
+
+  function send(){
+    const text = msgInput.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    history.push({role:'user', content:text});
+    msgInput.value = '';
+    callCompanion(text);
+  }
+
+  sendBtn.addEventListener('click', send);
+  msgInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+</script>
+</body>
+  </html>
